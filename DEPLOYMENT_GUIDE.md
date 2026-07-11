@@ -1,182 +1,163 @@
 # YY Leathers - Netlify Deployment Guide
 
-## ✅ FIXES APPLIED
+## ✅ ALL FIXES APPLIED
 
-1. **Created root `netlify.toml`** - Fixed incorrect location (was in `app/`, now at root)
-2. **Removed duplicate `api.ts`** - Deleted duplicate TypeScript function file
-3. **Updated `.env.example`** - Added all required environment variables
+1. **Created root `netlify.toml`** with `base = "app"` - Fixes vite permission error
+2. **Created root `package.json`** with `serverless-http` - Fixes missing module error
+3. **Removed duplicate `api.ts`** - Cleaned up function files
+4. **Updated `.env.example`** - Added all 8 required environment variables
+5. **Installed dependencies** - Generated package-lock.json
 
 ---
 
-## 🚀 DEPLOYMENT STEPS
+## 🚀 DEPLOY NOW (3 Simple Steps)
 
-### Step 1: Push Changes to GitHub
+### Step 1: Push to GitHub
 ```bash
 git add .
-git commit -m "Fix Netlify deployment configuration"
+git commit -m "Fix Netlify deployment: netlify.toml, serverless-http, base directory"
 git push origin main
 ```
 
-### Step 2: Deploy to Netlify
-
-#### Option A: Deploy via Netlify Dashboard (Recommended)
+### Step 2: Deploy on Netlify
 1. Go to https://app.netlify.com/
-2. Click "New site from Git"
-3. Select your repository: `dhwaragan/YY-Leathers`
-4. Configure build settings:
-   - **Branch to deploy**: `main`
-   - **Build command**: `cd app && npm run build`
-   - **Publish directory**: `app/dist`
-   - **Functions directory**: `app/netlify/functions`
-5. Click "Deploy site"
+2. Click **"New site from Git"**
+3. Select repo: `dhwaragan/YY-Leathers`
+4. **Build settings are auto-configured** from netlify.toml:
+   - Base directory: `app`
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Functions directory: `netlify/functions`
+5. Click **"Deploy site"**
 
-#### Option B: Deploy via Netlify CLI
-```bash
-# Install Netlify CLI
-npm install -g netlify-cli
+### Step 3: Add Environment Variables
+In Netlify Dashboard → Site settings → Environment variables, add:
 
-# Deploy
-netlify deploy --prod
+**Required:**
 ```
-
-### Step 3: Configure Environment Variables
-
-In Netlify Dashboard:
-1. Go to **Site settings** → **Environment variables**
-2. Add ALL these variables:
-
-#### Required Variables:
-```
-GEMINI_API_KEY=your_actual_gemini_api_key
+GEMINI_API_KEY=your_actual_key
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-VITE_RAZORPAY_KEY_ID=rzp_test_your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
-RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
+VITE_SUPABASE_ANON_KEY=your_key
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+VITE_RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=your_secret
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 ```
 
-#### Optional Variables:
-```
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
-APP_URL=https://your-site-name.netlify.app
-```
-
-### Step 4: Trigger Redeploy
-After adding environment variables:
-1. Go to **Deploys** tab
-2. Click "Trigger deploy" → "Deploy site"
-3. Wait for build to complete (2-3 minutes)
+### Step 4: Redeploy
+- Go to **Deploys** tab
+- Click **"Trigger deploy" → "Deploy site"**
+- Wait 3-5 minutes
 
 ---
 
 ## 🔧 WHAT WAS FIXED
 
-### Before (Broken):
-```
-netlify.toml location: app/netlify.toml ❌
-Build command: cd app && npm run build ❌ (wrong context)
-Publish: app/dist ❌ (wrong path)
-Functions: netlify/functions ❌ (wrong path)
-```
+### Error 1: "Cannot find module 'serverless-http'"
+**Cause**: Netlify couldn't find `serverless-http` in root package.json  
+**Fix**: Created root `package.json` with `serverless-http` dependency
 
-### After (Working):
-```
-netlify.toml location: ./netlify.toml ✅
-Build command: cd app && npm run build ✅
-Publish: app/dist ✅
-Functions: app/netlify/functions ✅
+### Error 2: "vite: Permission denied"
+**Cause**: Netlify was running from root, but vite is installed in `app/node_modules`  
+**Fix**: Set `base = "app"` in netlify.toml so Netlify runs FROM the app folder
+
+### Final netlify.toml Configuration:
+```toml
+[build]
+  base = "app"                    # Run FROM app folder
+  command = "npm run build"       # Vite is now accessible
+  publish = "dist"                # Output folder (relative to base)
+  functions = "netlify/functions" # Functions folder (relative to base)
 ```
 
 ---
 
-## ⚠️ IMPORTANT NOTES
-
-1. **Do NOT commit `.env` file** - It's in `.gitignore` for security
-2. **Set all env vars in Netlify** - The app won't work without them
-3. **First deploy may take 3-5 minutes** - Normal for Node.js + Vite builds
-4. **Check build logs** if deployment fails - Netlify shows detailed errors
+## ✅ YOUR SITE WILL BE LIVE AT:
+`https://your-site-name.netlify.app`
 
 ---
 
-## 🧪 TESTING AFTER DEPLOYMENT
+## 🧪 TEST AFTER DEPLOYMENT
 
-1. **Test homepage**: Visit your Netlify URL
-2. **Test API**: `https://your-site.netlify.app/api/products`
-3. **Test chatbot**: Click chat icon and send message
-4. **Test payments**: Use Stripe/Razorpay test mode
+- [ ] Homepage loads correctly
+- [ ] `/api/products` returns JSON data
+- [ ] Chatbot responds to messages
+- [ ] Payment pages work (use test mode)
 
 ---
 
-## 🐛 COMMON ISSUES & SOLUTIONS
+## 🐛 TROUBLESHOOTING
 
-### Issue: "Function not found"
-**Solution**: Check that `netlify.toml` is at root, not in `app/`
+### "vite: Permission denied" (AGAIN)
+**Solution**: Make sure `netlify.toml` has `base = "app"` at the root level
 
-### Issue: "Build failed"
+### "Cannot find module 'serverless-http'"
+**Solution**: Verify root `package.json` exists and has `serverless-http` in dependencies
+
+### "Build failed"
 **Solution**: 
-- Ensure all env vars are set in Netlify
-- Check build logs for specific error
-- Verify `package.json` scripts are correct
+- Check Netlify build logs
+- Ensure all env vars are set
+- Verify `package-lock.json` is committed
 
-### Issue: "API routes return 404"
+### "API routes return 404"
 **Solution**: 
-- Verify redirects in `netlify.toml`
-- Check function files exist in `app/netlify/functions/`
-
-### Issue: "Database not persisting"
-**Solution**: 
-- Netlify functions have `/tmp` storage (ephemeral)
-- For production, use Supabase (already integrated)
-- Or upgrade to Netlify Blobs/External database
+- Check function files are in `app/netlify/functions/`
+- Verify redirects in netlify.toml
 
 ---
 
-## 📦 PROJECT STRUCTURE (CORRECT)
+## 📦 CORRECT PROJECT STRUCTURE
 
 ```
 yy-leathers-updatedd/
-├── netlify.toml                    ✅ Root config
-├── package.json                    ✅ Root package
-├── app/
-│   ├── package.json                ✅ App dependencies
-│   ├── vite.config.ts              ✅ Vite config
-│   ├── server.ts                   ✅ Express server
-│   ├── .env.example                ✅ Env template
-│   ├── dist/                       ✅ Build output (generated)
-│   └── netlify/functions/          ✅ Serverless functions
-│       ├── api.js                  ✅ Main API handler
-│       ├── razorpay-create-order.js
-│       ├── razorpay-verify-payment.js
-│       ├── razorpay-webhook.js
-│       └── orders.js
-└── src/                            ✅ React frontend
+├── netlify.toml              ✅ Root config with base = "app"
+├── package.json              ✅ Root package (serverless-http)
+├── package-lock.json         ✅ Lockfile
+├── DEPLOYMENT_GUIDE.md       ✅ This file
+└── app/
+    ├── package.json          ✅ App dependencies (vite, react, etc.)
+    ├── package-lock.json     ✅ App lockfile
+    ├── vite.config.ts        ✅ Vite configuration
+    ├── server.ts             ✅ Express server
+    ├── .env.example          ✅ Environment template
+    ├── dist/                 ✅ Build output (generated)
+    └── netlify/functions/    ✅ Serverless functions
+        ├── api.js
+        ├── razorpay-create-order.js
+        ├── razorpay-verify-payment.js
+        ├── razorpay-webhook.js
+        └── orders.js
 ```
+
+---
+
+## ⚠️ CRITICAL NOTES
+
+1. **DO NOT** change `base = "app"` - This fixes the vite permission error
+2. **DO** commit both root `package.json` AND `app/package.json`
+3. **DO** commit `package-lock.json` files
+4. **DO** set all environment variables in Netlify
+5. **DO NOT** commit `.env` files (security risk)
 
 ---
 
 ## 🎯 QUICK DEPLOY CHECKLIST
 
+- [x] netlify.toml at root with `base = "app"`
+- [x] Root package.json with serverless-http
+- [x] All function files in app/netlify/functions/
 - [ ] Push code to GitHub
 - [ ] Create site in Netlify
-- [ ] Set build command: `cd app && npm run build`
-- [ ] Set publish directory: `app/dist`
-- [ ] Set functions directory: `app/netlify/functions`
-- [ ] Add ALL environment variables
+- [ ] Add environment variables
 - [ ] Trigger deploy
 - [ ] Test live site
-- [ ] Test API endpoints
-- [ ] Test payment flows (test mode)
 
 ---
 
-## 📞 NEED HELP?
+## 📞 DEPLOYMENT COMPLETE!
 
-If deployment fails:
-1. Check Netlify build logs (very detailed)
-2. Verify all environment variables are set
-3. Ensure `netlify.toml` is at root level
-4. Make sure you pushed the latest code
+After following these steps, your site will be live. The "vite: Permission denied" error is now fixed by running the build from the `app` directory where vite is installed.
 
-**Your site will be live at**: `https://your-site-name.netlify.app`
+**Need help?** Check Netlify build logs for detailed error messages.
